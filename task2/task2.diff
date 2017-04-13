@@ -1,0 +1,434 @@
+diff -bur task2orig/currentEvent.rndm task2/currentEvent.rndm
+--- task2orig/currentEvent.rndm	2017-04-13 17:39:27.000000000 +0700
++++ task2/currentEvent.rndm	2017-04-13 17:33:27.000000000 +0700
+@@ -1,5 +1,5 @@
+ Uvec
+ 1878463799
+ 0
+-1049445549
+-1686511507
++632025648
++1934953969
+Only in task2/: draw.cc
+Only in task2/: draw.cc~
+Only in task2/: exampleN03orig.cc
+diff -bur task2orig/G4History.macro task2/G4History.macro
+--- task2orig/G4History.macro	2017-04-13 17:39:27.000000000 +0700
++++ task2/G4History.macro	2017-04-13 17:32:48.000000000 +0700
+@@ -2,4 +2,4 @@
+ /event/verbose 0
+ /tracking/verbose 0
+ /N03/event/printModulo 100
+-/run/beamOn 1000
++/run/beamOn 10000
+diff -bur task2orig/GNUmakefile task2/GNUmakefile
+--- task2orig/GNUmakefile	2017-04-13 17:39:25.000000000 +0700
++++ task2/GNUmakefile	2017-03-23 16:43:55.000000000 +0700
+@@ -13,7 +13,7 @@
+ 
+ ifdef ROOTSYS
+   CPPFLAGS  += `root-config --cflags`
+-  EXTRALIBS += `root-config --libs`
++  EXTRALIBS += `root-config --libs` -L/home/gerasyov-2427/work/tmp/Linux-g++/exampleN03/
+ endif
+ 
+ .PHONY: all
+Only in task2/: GNUmakefile~
+diff -bur task2orig/include/ExN03DetectorConstruction.hh task2/include/ExN03DetectorConstruction.hh
+--- task2orig/include/ExN03DetectorConstruction.hh	2017-04-13 17:39:27.000000000 +0700
++++ task2/include/ExN03DetectorConstruction.hh	2017-03-30 16:44:16.000000000 +0700
+@@ -38,6 +38,8 @@
+ #include "G4VUserDetectorConstruction.hh"
+ #include "globals.hh"
+ 
++#include <vector>
++
+ class G4Box;
+ class G4LogicalVolume;
+ class G4VPhysicalVolume;
+@@ -86,13 +88,13 @@
+      G4LogicalVolume*   logicWorld;    //pointer to the logical World
+      G4VPhysicalVolume* physiWorld;    //pointer to the physical World
+ 
+-     G4Box*             solidCalor;    //pointer to the solid Calor 
+-     G4LogicalVolume*   logicCalor;    //pointer to the logical Calor
+-     G4VPhysicalVolume* physiCalor;    //pointer to the physical Calor
+-     
+-     G4Box*             solidLayer;    //pointer to the solid Layer 
+-     G4LogicalVolume*   logicLayer;    //pointer to the logical Layer
+-     G4VPhysicalVolume* physiLayer;    //pointer to the physical Layer
++     G4Box**             solidCalor;    //pointer to the solid Calor 
++     G4LogicalVolume**   logicCalor;    //pointer to the logical Calor
++     G4VPhysicalVolume** physiCalor;    //pointer to the physical Calor
++     
++     G4Box**             solidLayer;    //pointer to the solid Layer 
++     G4LogicalVolume**   logicLayer;    //pointer to the logical Layer
++     G4VPhysicalVolume** physiLayer;    //pointer to the physical Layer
+          
+   private:
+     
+Only in task2/include: ExN03DetectorConstruction.hh~
+diff -bur task2orig/include/ExN03EventAction.hh task2/include/ExN03EventAction.hh
+--- task2orig/include/ExN03EventAction.hh	2017-04-13 17:39:27.000000000 +0700
++++ task2/include/ExN03EventAction.hh	2017-03-30 17:22:29.000000000 +0700
+@@ -53,7 +53,7 @@
+   void  BeginOfEventAction(const G4Event*);
+   void    EndOfEventAction(const G4Event*);
+     
+-  void AddData(G4double de) { sumData += de; }
++  void AddData(G4int idx, G4double de) { sumData[idx] += de; }
+                      
+   void SetPrintModulo(G4int    val)  {printModulo = val;};
+     
+@@ -61,7 +61,7 @@
+    ExN03RunAction*  runAct;
+    ExN03DetectorConstruction* detector;
+    
+-   G4double sumData;
++   G4double *sumData;
+                      
+    G4int     printModulo;
+                              
+Only in task2/include: ExN03EventAction.hh~
+diff -bur task2orig/include/ExN03RunAction.hh task2/include/ExN03RunAction.hh
+--- task2orig/include/ExN03RunAction.hh	2017-04-13 17:39:27.000000000 +0700
++++ task2/include/ExN03RunAction.hh	2017-04-06 16:54:53.000000000 +0700
+@@ -43,6 +43,8 @@
+ 
+ //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+ 
++#define NB_OF_LAYERS 10
++
+ class G4Run;
+ class ExN03PrimaryGeneratorAction;
+ 
+@@ -55,7 +57,7 @@
+   void BeginOfRunAction(const G4Run*);
+   void   EndOfRunAction(const G4Run*);
+     
+-  void fillPerEvent(G4double);
++  void fillPerEvent(const G4double*);
+ 
+ private:
+   
+@@ -64,6 +66,7 @@
+ 
+   G4int pid;
+   G4float esum;
++  G4float elayer[NB_OF_LAYERS];
+ 
+   ExN03PrimaryGeneratorAction *primGen;
+ };
+Only in task2/include: ExN03RunAction.hh~
+diff -bur task2orig/run1.mac task2/run1.mac
+--- task2orig/run1.mac	2017-04-13 17:39:27.000000000 +0700
++++ task2/run1.mac	2017-04-13 17:01:58.000000000 +0700
+@@ -13,4 +13,4 @@
+ /tracking/verbose 0
+ /N03/event/printModulo 100
+ # 
+-/run/beamOn 1000
++/run/beamOn 10000
+Only in task2/: run1.mac~
+diff -bur task2orig/src/ExN03DetectorConstruction.cc task2/src/ExN03DetectorConstruction.cc
+--- task2orig/src/ExN03DetectorConstruction.cc	2017-04-13 17:39:27.000000000 +0700
++++ task2/src/ExN03DetectorConstruction.cc	2017-04-13 17:27:37.000000000 +0700
+@@ -59,9 +59,9 @@
+  solidLayer(0),logicLayer(0),physiLayer(0)
+ {
+   // default parameter values of the calorimeter
+-  NbOfLayers        =  7;
++  NbOfLayers        = 10;
+   CalorSizeYZ       = 10.*cm;
+-  LayerThickness    = 1.*cm;
++  LayerThickness    = 0.6*cm;
+ 
+   WorldSizeX  = GetCalorThickness()*1.2;
+   WorldSizeYZ = CalorSizeYZ*1.2;
+@@ -102,27 +102,22 @@
+ 
+ G4Element* N  = new G4Element("Nitrogen",symbol="N" ,  z= 7.,  a= 14.01*g/mole);
+ G4Element* O  = new G4Element("Oxygen"  ,symbol="O" ,  z= 8.,  a= 16.00*g/mole);
+-G4Element* Si = new G4Element("Silicon", symbol="Si" , z= 14., a= 28.09*g/mole);
+-G4Element* Ti = new G4Element("Titanium",symbol="Ti" , z= 22., a= 47.87*g/mole);
+-G4Element* As = new G4Element("Arsenic", symbol="As" , z= 33., a= 74.92*g/mole);
+-G4Element* Pb = new G4Element("Lead",    symbol="Pb" , z= 82., a= 207.2*g/mole);
++G4Element* Cs = new G4Element("Caesium" ,symbol="Cs",  z= 55., a= 132.91*g/mole);
++G4Element* I  = new G4Element("Iodine"  ,symbol="I" ,  z= 53., a= 126.90*g/mole);
+ 
+ //
+ // define materials from elements: air and lead glass
+ //
+ 
+ G4Material* Air = 
+-new G4Material("Air"  , density= 1.290*mg/cm3, ncomponents=2);
++new G4Material("Air", density= 1.290*mg/cm3, ncomponents=2);
+ Air->AddElement(N, fractionmass=0.7);
+ Air->AddElement(O, fractionmass=0.3);
+  
+- G4Material* LeadGlass = 
+-   new G4Material("LeadGlass"  , density= 6.22*g/cm3, ncomponents=5);
+- LeadGlass->AddElement(O,  fractionmass=0.1565);
+- LeadGlass->AddElement(Si, fractionmass=0.0809);
+- LeadGlass->AddElement(Ti, fractionmass=0.0081);
+- LeadGlass->AddElement(As, fractionmass=0.0027);
+- LeadGlass->AddElement(Pb, fractionmass=0.7519);
++ G4Material* CsI = 
++   new G4Material("CsI", density= 4.51*g/cm3, ncomponents=2);
++ CsI->AddElement(Cs, fractionmass=0.5115);
++ CsI->AddElement(I,  fractionmass=0.4885);
+ 
+ G4cout << *(G4Material::GetMaterialTable()) << G4endl;
+ 
+@@ -130,7 +125,7 @@
+ defaultMaterial  = Air;
+ 
+ // material of the scintillator
+-scintMaterial  = LeadGlass;
++scintMaterial  = CsI;
+ 
+ }
+ 
+@@ -167,43 +162,49 @@
+   //                               
+   // Calorimeter
+   //  
+-  solidCalor=0; logicCalor=0; physiCalor=0;
+-  solidLayer=0; logicLayer=0; physiLayer=0;
++  solidCalor = new G4Box*[NbOfLayers];
++  logicCalor = new G4LogicalVolume*[NbOfLayers];
++  physiCalor = new G4VPhysicalVolume*[NbOfLayers];
++  for (int i = 0; i < NbOfLayers; ++i) {
++    solidCalor[i] = new G4Box("Calorimeter",		//its name
++  			   LayerThickness/2,CalorSizeYZ/2,CalorSizeYZ/2);//size
+   
+-
+-  solidCalor = new G4Box("Calorimeter",		//its name
+-			 GetCalorThickness()/2,CalorSizeYZ/2,CalorSizeYZ/2);//size
+-    			     
+-  logicCalor = new G4LogicalVolume(solidCalor,	//its solid
++    logicCalor[i] = new G4LogicalVolume(solidCalor[i],	//its solid
+ 				   defaultMaterial,	//its material
+ 				   "Calorimeter");	//its name
+     				       
+-  physiCalor = new G4PVPlacement(0,			//no rotation
+-				 G4ThreeVector(),	//at (0,0,0)
+-				 logicCalor,	//its logical volume
++    physiCalor[i] = new G4PVPlacement(0,			//no rotation
++				   G4ThreeVector(LayerThickness*(i + 0.5 - 0.5*NbOfLayers),0,0),	//at (0,0,0)
++				   logicCalor[i],	//its logical volume
+ 				 "Calorimeter",	//its name
+ 				 logicWorld,	//its mother  volume
+ 				 false,		//no boolean operation
+-				 0);		//copy number
++				   i);		//copy number
++  }
+   
+   //                                 
+   // Layer
+   //
+-  solidLayer = new G4Box("Layer",			//its name
+-			 NbOfLayers*LayerThickness/2,
++  solidLayer = new G4Box*[NbOfLayers];
++  logicLayer = new G4LogicalVolume*[NbOfLayers];
++  physiLayer = new G4VPhysicalVolume*[NbOfLayers];
++  for (int i = 0; i < NbOfLayers; ++i) {
++    solidLayer[i] = new G4Box("Layer",			//its name
++  			 LayerThickness/2,
+ 			 CalorSizeYZ/2,CalorSizeYZ/2); //size
+                        
+-  logicLayer = new G4LogicalVolume(solidLayer,	//its solid
++    logicLayer[i] = new G4LogicalVolume(solidLayer[i],	//its solid
+ 				   scintMaterial,	//its material
+ 				   "Layer");	//its name
+ 
+-  physiLayer = new G4PVPlacement(0,			//no rotation
++    physiLayer[i] = new G4PVPlacement(0,			//no rotation
+ 				 G4ThreeVector(),	//at (0,0,0)
+-				 logicLayer,	//its logical volume
++  				 logicLayer[i],	//its logical volume
+ 				 "Layer",	//its name
+-				 logicCalor,	//its mother  volume
++  				 logicCalor[i],	//its mother  volume
+ 				 false,		//no boolean operation
+-				 0);		//copy number
++  				 i+1);		//copy number
++  }
+   //                                        
+   // Visualization attributes
+   //
+@@ -211,7 +212,9 @@
+ 
+   G4VisAttributes* simpleBoxVisAtt= new G4VisAttributes(G4Colour(1.0,1.0,1.0));
+   simpleBoxVisAtt->SetVisibility(true);
+-  logicCalor->SetVisAttributes(simpleBoxVisAtt);
++  for (int i = 0; i < NbOfLayers; ++i) {
++    logicCalor[i]->SetVisAttributes(simpleBoxVisAtt);
++  }
+ 
+  /*
+   // Below are vis attributes that permits someone to test / play 
+Only in task2/src: ExN03DetectorConstruction.cc~
+diff -bur task2orig/src/ExN03EventAction.cc task2/src/ExN03EventAction.cc
+--- task2orig/src/ExN03EventAction.cc	2017-04-13 17:39:27.000000000 +0700
++++ task2/src/ExN03EventAction.cc	2017-04-06 16:46:32.000000000 +0700
+@@ -54,7 +54,7 @@
+   :runAct(run),detector(det),printModulo(1),eventMessenger(0)
+ {
+   eventMessenger = new ExN03EventActionMessenger(this);
+-  sumData = 0;
++  sumData = new G4double[detector->GetNbOfLayers()];
+ }
+ 
+ //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+@@ -75,7 +75,9 @@
+   }
+  
+  // initialisation per event
+-  sumData = 0;
++  for (int i = 0; i < detector->GetNbOfLayers(); ++i) {
++    sumData[i] = 0;
++  }
+ }
+ 
+ //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+@@ -91,10 +93,12 @@
+   G4int evtNb = evt->GetEventID();
+   if (evtNb%printModulo == 0) {
+     G4cout << "---> End of event: " << evtNb << G4endl;	
++    for (int i = 0; i < detector->GetNbOfLayers(); ++i) {
+     G4cout
+-       << "        Total energy: " << std::setw(7)
+-       << G4BestUnit(sumData,"Energy")
++         << "        Total energy in Layer " << i << ": " << std::setw(7)
++         << G4BestUnit(sumData[i],"Energy")
+        << G4endl;
++    }
+ 	  
+   }
+ }  
+Only in task2/src: ExN03EventAction.cc~
+diff -bur task2orig/src/ExN03PrimaryGeneratorAction.cc task2/src/ExN03PrimaryGeneratorAction.cc
+--- task2orig/src/ExN03PrimaryGeneratorAction.cc	2017-04-13 17:39:27.000000000 +0700
++++ task2/src/ExN03PrimaryGeneratorAction.cc	2017-04-13 17:18:20.000000000 +0700
+@@ -71,13 +71,25 @@
+   G4String particleName;
+   G4ParticleDefinition* particle;
+ 
+-  //particle = particleTable->FindParticle(particleName="gamma"); 
+-  particle = particleTable->FindParticle(particleName="mu-"); 
++  float r = G4UniformRand();
++  float en = 300.0; // MeV
++  if (r < 1.0/3) {
++    particle = particleTable->FindParticle(particleName="gamma");
+   pid = 0;
++    en -= 0.0;
++  } else if (r >= 2.0/3) {
++    particle = particleTable->FindParticle(particleName="e-");
++    pid = 1;
++    en -= 0.5109989461;
++  } else {
++    particle = particleTable->FindParticle(particleName="mu-");
++    pid = 2;
++    en -= 105.6583745;
++  }
+ 
+   particleGun->SetParticleDefinition(particle);
+   particleGun->SetParticleMomentumDirection(G4ThreeVector(1.,0.,0.));
+-  particleGun->SetParticleEnergy(0.2*GeV);
++  particleGun->SetParticleEnergy(en*MeV);
+   G4double position = -0.5*(ExN03Detector->GetWorldSizeX());
+ 
+   //this function is called at the begining of event
+Only in task2/src: ExN03PrimaryGeneratorAction.cc~
+diff -bur task2orig/src/ExN03RunAction.cc task2/src/ExN03RunAction.cc
+--- task2orig/src/ExN03RunAction.cc	2017-04-13 17:39:27.000000000 +0700
++++ task2/src/ExN03RunAction.cc	2017-04-13 16:42:35.000000000 +0700
+@@ -43,6 +43,9 @@
+  :primGen(gen)
+ {
+   esum = 0;
++  for (int i = 0; i < NB_OF_LAYERS; ++i) {
++    elayer[i] = 0;
++  }
+ }
+ 
+ //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+@@ -67,16 +70,24 @@
+ 
+ //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+ 
+-void ExN03RunAction::fillPerEvent(G4double edep1)
++#define xstr(a) str(a)
++#define str(a) #a
++
++void ExN03RunAction::fillPerEvent(const G4double *edep1)
+ {
+   if( tree==0 ) {
+     tree   = new TTree("tree","All data");
+     tree->Branch("pid",&pid,"pid/I");
+     tree->Branch("esum",&esum,"esum/F");
++    tree->Branch("elayer",&elayer,"elayer[" xstr(NB_OF_LAYERS) "]/F");
+   }
+ 
+   pid = primGen->GetLastParticleType();
+-  esum=edep1;
++  esum = 0.0;
++  for (int i = 0; i < NB_OF_LAYERS; ++i) {
++    esum += edep1[i];
++    elayer[i] = edep1[i];
++  }
+ 
+   tree->Fill();
+ }
+Only in task2/src: ExN03RunAction.cc~
+diff -bur task2orig/src/ExN03SteppingAction.cc task2/src/ExN03SteppingAction.cc
+--- task2orig/src/ExN03SteppingAction.cc	2017-04-13 17:39:27.000000000 +0700
++++ task2/src/ExN03SteppingAction.cc	2017-04-13 17:32:24.000000000 +0700
+@@ -61,10 +61,30 @@
+   G4VPhysicalVolume* volume 
+   = aStep->GetPreStepPoint()->GetTouchableHandle()->GetVolume();
+   
++  int n = detector->GetNbOfLayers();
++  int idx = volume->GetCopyNo();
++  if (idx > 0 && idx <= n) {
+   // collect energy and track length step by step
+   G4double edep = aStep->GetTotalEnergyDeposit();
++    if( edep>0 ) eventaction->AddData(idx - 1, edep);
++  }
+   
+-  if( edep>0 ) eventaction->AddData(edep);
++  /*
++  G4ThreeVector pos = aStep->GetPreStepPoint()->GetPosition();
++  G4double n = detector->GetNbOfLayers();
++  G4double s = detector->GetCalorThickness();
++  G4double x = s/n;
++  G4double yz = detector->GetCalorSizeYZ();
++  
++  if (pos.getY() > -yz && pos.getY() < yz && pos.getZ() > -yz && pos.getZ() < yz) {
++    int idx = pos.getX()/x + 0.5*n + 0.5;
++    if (idx >= 0 && idx < n) {
++      // collect energy and track length step by step
++      G4double edep = aStep->GetTotalEnergyDeposit();
++      if( edep>0 ) eventaction->AddData(idx, edep);
++    }
++  }
++  */
+ }
+ 
+ //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+Only in task2/src: ExN03SteppingAction.cc~
+Only in task2/: tree.root
+diff -bur task2orig/vis.mac task2/vis.mac
+--- task2orig/vis.mac	2017-04-13 17:39:27.000000000 +0700
++++ task2/vis.mac	2017-04-06 16:58:45.000000000 +0700
+@@ -62,7 +62,7 @@
+ /vis/scene/endOfEventAction accumulate
+ #
+ # At end of each run, an automatic flush causes graphical output.
+-/run/beamOn 100
++/run/beamOn 10
+ # When you exit Geant4, you will find a file called scene-0.heprep.zip.
+ # Unzipping this will give you three separate HepRep files suitable for
+ # viewing in WIRED.
+Only in task2/: vis.mac~
