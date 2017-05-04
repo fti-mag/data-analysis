@@ -11,7 +11,9 @@ double func(double x) {
 }
 
 const double E = 2.7182818284590452353602874713527;
-double norm = 5.0/4.0 - 13.0/(4.0*E);
+const double norm = 5.0/4.0 - 13.0/(4.0*E);
+const double x0 = (46.0 - 17.0*E)/(13.0 - 5.0*E);
+const double sig0 = sqrt((201.0 - 74.0*E)/(13.0 - 5.0*E) - x0*x0);
 
 double rand_unif() {
   return gRandom->Uniform();
@@ -22,16 +24,29 @@ double rand_sqr() {
   return (1 - 2*(x < 0.0))*pow(fabs(x), 1.0/3.0) + 0.5;
 }
 
+//#define DISTORTION
+
 double getRandom() {
   double x, y;
   do { 
     x = rand_sqr();
     y = rand_unif();
   } while (exp(-x) < y);
+#ifndef DISTORTION
   return x;
+#else
+  if (gRandom->Uniform() < 0.01) {
+    return x + 10*gRandom->Gaus(0,1);
+  } else {
+    return x;
+  }
+#endif
 }
 
 void task1(){
+
+  std::cout << "x0: " << x0 << std::endl;
+  std::cout << "sig0: " << sig0 << std::endl;
 
   // 1. Fill histogram with random numbers distributed according to
   //    predefined distribution  
@@ -48,8 +63,6 @@ void task1(){
   const int ndemo = 1000;
   const int nevent = 100;
   const int nexperiment = 1000;
-  const double x0 = 0.5;
-  const double sig0 = 1/sqrt(12.0);
 
   // Book histograms
 
@@ -94,15 +107,18 @@ void task1(){
   // Fill distributions of median
 
   // Fill demo distributions
-  for( int i=0; i<ndemo; i++ ) {
-
-    double sum2 = 0;
-    for( int j=0; j<2; j++ ) {
-      sum2 += (getRandom()-x0);
+  double sum;
+  int ns[] = {2, 5, 100};
+  TH1D *hs[] = {h4, h5, h6};
+  for(int i = 0; i < ndemo; i++) {
+    int j = 0;
+    sum = 0.0;
+    for (int k = 0; k < sizeof(ns)/sizeof(ns[0]); ++k) {
+      for(j = 0; j < ns[k]; j++) {
+        sum += (getRandom() - x0);
+      }
+      hs[k]->Fill(sum/(sqrt(ns[k])*sig0));
     }
-    sum2 /= (sqrt(2)*sig0);
-    h4->Fill(sum2);
-
   }
 
   // Draw histograms
@@ -132,6 +148,5 @@ void task1(){
   c1->cd(6);
   h6->Draw();
   fgauss->Draw("same");
-
 }
   
